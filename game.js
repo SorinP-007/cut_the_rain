@@ -181,10 +181,26 @@ function drawAnimal() {
     ctx.shadowColor = "#ffca3a"; ctx.shadowBlur = 28;
     ctx.scale(1 + animal.hitFlash * .18, 1 + animal.hitFlash * .18);
   }
-  ctx.textAlign = "center";
-  ctx.font = `${animal.radius * 1.65}px "Segoe UI Emoji", sans-serif`;
-  ctx.fillText("🦔", 0, animal.radius * .52);
+  ctx.fillStyle = "#6f412c";
+  ctx.beginPath();
+  for (let i = 0; i < 18; i++) {
+    const a = Math.PI + (Math.PI * i / 17);
+    const r = i % 2 ? animal.radius * .78 : animal.radius * 1.12;
+    const px = Math.cos(a) * r, py = Math.sin(a) * r * .72;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.lineTo(animal.radius * .9, animal.radius * .38);
+  ctx.lineTo(-animal.radius * .8, animal.radius * .45);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "#d9a16f";
+  ctx.beginPath(); ctx.ellipse(animal.radius*.28, 2, animal.radius*.72, animal.radius*.55, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#24150f";
+  ctx.beginPath(); ctx.arc(animal.radius*.9, -2, 5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(animal.radius*.38, -animal.radius*.18, 3.5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = "#efc08e";
+  ctx.beginPath(); ctx.arc(animal.radius*.08, -animal.radius*.44, 8, 0, Math.PI*2); ctx.fill();
   ctx.shadowBlur = 0;
+  ctx.textAlign = "center";
   ctx.font = "900 10px Nunito";
   ctx.fillStyle = "rgba(255,255,255,.8)";
   ctx.fillText("PROTEJEAZĂ-MĂ!", 0, animal.radius + 22);
