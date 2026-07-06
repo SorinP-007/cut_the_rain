@@ -17,6 +17,7 @@ let score = 0, combo = 1, lives = 3, playing = false, slicing = false, muted = f
 let ending = false;
 let lastSpawn = 0, spawnEvery = 850, lastSlice = 0, startedAt = 0;
 let audioCtx;
+let frameCount = 0;
 const animal = { x: 0, y: 0, vx: 1.35, radius: 42, hitFlash: 0 };
 
 function resize() {
@@ -111,6 +112,17 @@ function cut(drop) {
   splash(drop.x, drop.y, drop.hue);
 }
 
+function cutAtPoint(p) {
+  for (let i = drops.length - 1; i >= 0; i--) {
+    const d = drops[i];
+    if (!d.dead && Math.hypot(d.x - p.x, d.y - p.y) < d.r * 1.28) {
+      cut(d);
+      return true;
+    }
+  }
+  return false;
+}
+
 function missDrop() {
   if (!playing || ending) return;
   lives--; combo = 1; comboEl.textContent = "×1";
@@ -121,7 +133,7 @@ function missDrop() {
 
 function startGame() {
   drops = []; particles = []; trails = []; score = 0; combo = 1; lives = 3;
-  spawnEvery = 850; startedAt = performance.now(); lastSpawn = performance.now(); ending = false; playing = true;
+  spawnEvery = 850; startedAt = performance.now(); lastSpawn = performance.now(); lastSlice = 0; ending = false; playing = true;
   animal.x = innerWidth / 2; animal.y = innerHeight - Math.max(58, innerHeight * .075); animal.vx = 1.35; animal.hitFlash = 0;
   scoreEl.textContent = "0"; comboEl.textContent = "×1"; livesEl.textContent = "💙 💙 💙";
   welcome.classList.add("hidden"); gameover.classList.add("hidden"); shell.classList.add("playing");
@@ -146,7 +158,9 @@ canvas.addEventListener("pointerdown", e => {
   if (!playing) return;
   slicing = true;
   try { canvas.setPointerCapture(e.pointerId); } catch {}
-  trails.push({...pointerPos(e), life: 1});
+  const p = pointerPos(e);
+  trails.push({...p, life: 1});
+  cutAtPoint(p);
 });
 canvas.addEventListener("pointerup", () => slicing = false);
 canvas.addEventListener("pointercancel", () => slicing = false);
@@ -209,6 +223,7 @@ function drawAnimal() {
 
 function frame(now) {
   requestAnimationFrame(frame);
+  frameCount++;
   ctx.clearRect(0, 0, innerWidth, innerHeight);
   if (playing) {
     spawnEvery = Math.max(390, 850 - (now - startedAt) / 80);
@@ -219,7 +234,7 @@ function frame(now) {
   particles.forEach(p => {
     p.x += p.vx; p.y += p.vy; p.vy += .18; p.life -= .025;
     ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = `hsl(${p.hue} 90% 64%)`;
-    ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(.01, p.size * p.life), 0, Math.PI*2); ctx.fill();
   }); particles = particles.filter(p => p.life > 0); ctx.globalAlpha = 1;
   trails.forEach(t => t.life -= .06); trails = trails.filter(t => t.life > 0);
   if (trails.length > 1) {
@@ -232,3 +247,22 @@ function frame(now) {
   }
 }
 requestAnimationFrame(frame);
+
+// Test de stres izolat, activ doar cu ?stress=50.
+if (new URLSearchParams(location.search).get("stress") === "50") {
+  setTimeout(() => {
+    startGame();
+    muted = true;
+    const checkpoints = [];
+    for (let i = 1; i <= 50; i++) {
+      const testDrop = new Drop();
+      testDrop.x = innerWidth / 2; testDrop.y = innerHeight / 2;
+      cut(testDrop);
+      if (i % 10 === 0) checkpoints.push(score);
+    }
+    document.body.dataset.stressScores = checkpoints.join(",");
+    document.body.dataset.stressTotal = String(score);
+    document.body.dataset.stressFrameStart = String(frameCount);
+    setTimeout(() => document.body.dataset.stressFrameEnd = String(frameCount), 250);
+  }, 100);
+}
