@@ -14,6 +14,7 @@ const soundButton = document.querySelector("#soundButton");
 const words = ["ploaie", "râu", "mare", "nor", "val", "izvor", "ocean", "rouă", "lac", "strop", "abur", "gheață"];
 let drops = [], particles = [], trails = [];
 let score = 0, combo = 1, lives = 3, playing = false, slicing = false, muted = false;
+let ending = false;
 let lastSpawn = 0, spawnEvery = 850, lastSlice = 0, startedAt = 0;
 let audioCtx;
 
@@ -88,6 +89,7 @@ function cut(drop) {
 }
 
 function missDrop() {
+  if (!playing || ending) return;
   lives--; combo = 1; comboEl.textContent = "×1";
   livesEl.textContent = Array.from({length: 3}, (_, i) => i < lives ? "💙" : "🖤").join(" ");
   sound(130, .22, "sawtooth");
@@ -96,7 +98,7 @@ function missDrop() {
 
 function startGame() {
   drops = []; particles = []; trails = []; score = 0; combo = 1; lives = 3;
-  spawnEvery = 850; startedAt = performance.now(); lastSpawn = performance.now(); playing = true;
+  spawnEvery = 850; startedAt = performance.now(); lastSpawn = performance.now(); ending = false; playing = true;
   scoreEl.textContent = "0"; comboEl.textContent = "×1"; livesEl.textContent = "💙 💙 💙";
   welcome.classList.add("hidden"); gameover.classList.add("hidden"); shell.classList.add("playing");
   instruction.classList.remove("hidden"); setTimeout(() => instruction.classList.add("hidden"), 2200);
@@ -104,11 +106,15 @@ function startGame() {
 }
 
 function endGame() {
+  if (ending) return;
+  ending = true;
   playing = false; slicing = false; shell.classList.remove("playing");
+  drops = [];
+  trails = [];
   finalScoreEl.textContent = score;
   const best = Math.max(score, Number(localStorage.getItem("taieApaBest") || 0));
   localStorage.setItem("taieApaBest", best); bestScoreEl.textContent = best;
-  setTimeout(() => gameover.classList.remove("hidden"), 450);
+  gameover.classList.remove("hidden");
 }
 
 function pointerPos(e) { return {x: e.clientX, y: e.clientY}; }
