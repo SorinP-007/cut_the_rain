@@ -28,13 +28,18 @@ addEventListener("resize", resize); resize();
 
 function sound(freq = 440, duration = .08, type = "sine") {
   if (muted) return;
-  audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-  const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-  osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(freq * 1.7, audioCtx.currentTime + duration);
-  gain.gain.setValueAtTime(.12, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
-  osc.connect(gain).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.7, audioCtx.currentTime + duration);
+    gain.gain.setValueAtTime(.12, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration);
+    osc.connect(gain).connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch {
+    muted = true;
+    soundButton.textContent = "🔇";
+  }
 }
 
 class Drop {
@@ -86,6 +91,7 @@ function cut(drop) {
     x: drop.x, y: drop.y, vx: (Math.random()-.5)*9, vy: (Math.random()-.7)*9,
     life: 1, size: 3 + Math.random()*7, hue: drop.hue
   });
+  if (particles.length > 180) particles.splice(0, particles.length - 180);
 }
 
 function missDrop() {
@@ -118,12 +124,19 @@ function endGame() {
 }
 
 function pointerPos(e) { return {x: e.clientX, y: e.clientY}; }
-canvas.addEventListener("pointerdown", e => { if (!playing) return; slicing = true; canvas.setPointerCapture(e.pointerId); trails.push({...pointerPos(e), life: 1}); });
+canvas.addEventListener("pointerdown", e => {
+  if (!playing) return;
+  slicing = true;
+  try { canvas.setPointerCapture(e.pointerId); } catch {}
+  trails.push({...pointerPos(e), life: 1});
+});
 canvas.addEventListener("pointerup", () => slicing = false);
 canvas.addEventListener("pointercancel", () => slicing = false);
 canvas.addEventListener("pointermove", e => {
   if (!slicing || !playing) return;
-  const p = pointerPos(e), prev = trails.at(-1) || p; trails.push({...p, life: 1});
+  const p = pointerPos(e), prev = trails[trails.length - 1] || p;
+  trails.push({...p, life: 1});
+  if (trails.length > 30) trails.splice(0, trails.length - 30);
   drops.forEach(d => {
     if (d.dead) return;
     const dx = p.x - prev.x, dy = p.y - prev.y;
@@ -139,6 +152,7 @@ document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
 
 function frame(now) {
+  requestAnimationFrame(frame);
   ctx.clearRect(0, 0, innerWidth, innerHeight);
   if (playing) {
     spawnEvery = Math.max(390, 850 - (now - startedAt) / 80);
@@ -159,6 +173,5 @@ function frame(now) {
     }
     ctx.shadowBlur = 0;
   }
-  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
