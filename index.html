@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#071a2c">
+  <title>Taie Apa!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="game" aria-label="Jocul Taie Apa"></canvas>
+
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Taie Apa, pagina principală">
+        <span class="brand-drop">💧</span>
+        <span>TAIE <b>APA!</b></span>
+      </a>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><span>SCOR</span><strong id="score">0</strong></div>
+        <div class="stat combo-stat"><span>COMBO</span><strong id="combo">×1</strong></div>
+        <div class="lives" id="lives" aria-label="3 vieți">💙 💙 💙</div>
+      </div>
+      <button class="sound-button" id="soundButton" type="button" aria-label="Oprește sunetul">🔊</button>
+    </header>
+
+    <section class="welcome card" id="welcome">
+      <div class="mascot" aria-hidden="true">
+        <div class="mascot-shine"></div>
+        <div class="eye left"></div><div class="eye right"></div>
+        <div class="smile"></div>
+      </div>
+      <p class="eyebrow">JOC DE VITEZĂ</p>
+      <h1>Taie picăturile.<br><em>Prinde cuvintele!</em></h1>
+      <p class="intro">Ține apăsat și mișcă mouse-ul peste picături. Fiecare cuvânt salvat îți aduce puncte!</p>
+      <button class="primary-button" id="startButton" type="button">
+        <span>JOACĂ ACUM</span><i>→</i>
+      </button>
+      <p class="hint"><span>🖱️</span> Ține apăsat &amp; taie</p>
+    </section>
+
+    <section class="gameover card hidden" id="gameover">
+      <p class="eyebrow">RUNDA S-A ÎNCHEIAT</p>
+      <h2>Val zdravăn!</h2>
+      <p>Ai strâns</p>
+      <strong class="final-score" id="finalScore">0</strong>
+      <span class="points-label">PUNCTE</span>
+      <p class="best">Record: <b id="bestScore">0</b></p>
+      <button class="primary-button" id="restartButton" type="button"><span>MAI ÎNCEARCĂ</span><i>↻</i></button>
+    </section>
+
+    <div class="instruction hidden" id="instruction">ȚINE APĂSAT ȘI TAIE! ✨</div>
+    <div class="wave wave-back"></div>
+    <div class="wave wave-front"></div>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>
