@@ -17,12 +17,15 @@ let score = 0, combo = 1, lives = 3, playing = false, slicing = false, muted = f
 let ending = false;
 let lastSpawn = 0, spawnEvery = 850, lastSlice = 0, startedAt = 0;
 let audioCtx;
+const animal = { x: 0, y: 0, vx: 1.35, radius: 42, hitFlash: 0 };
 
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
   canvas.width = innerWidth * dpr; canvas.height = innerHeight * dpr;
   canvas.style.width = innerWidth + "px"; canvas.style.height = innerHeight + "px";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  animal.y = innerHeight - Math.max(58, innerHeight * .075);
+  if (!animal.x) animal.x = innerWidth / 2;
 }
 addEventListener("resize", resize); resize();
 
@@ -58,9 +61,19 @@ class Drop {
   }
   update() {
     this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.angle += this.spin;
+    const hitAnimal = this.vy > 0
+      && this.y + this.r * 1.15 >= animal.y - animal.radius * .5
+      && this.y - this.r < animal.y + animal.radius
+      && Math.abs(this.x - animal.x) < animal.radius + this.r * .55;
+    if (hitAnimal) {
+      this.dead = true;
+      animal.hitFlash = 1;
+      splash(this.x, animal.y, this.hue, 24);
+      missDrop();
+      return;
+    }
     if (this.y > innerHeight + this.r * 2 && this.vy > 0) {
       this.dead = true;
-      if (playing) missDrop();
     }
   }
   draw() {
@@ -83,15 +96,19 @@ class Drop {
 
 function spawnDrop() { drops.push(new Drop()); }
 
+function splash(x, y, hue, count = 18) {
+  for (let i = 0; i < count; i++) particles.push({
+    x, y, vx: (Math.random()-.5)*9, vy: (Math.random()-.7)*9,
+    life: 1, size: 3 + Math.random()*7, hue
+  });
+  if (particles.length > 180) particles.splice(0, particles.length - 180);
+}
+
 function cut(drop) {
   drop.dead = true; combo = Date.now() - lastSlice < 900 ? Math.min(combo + 1, 8) : 1; lastSlice = Date.now();
   score += 10 * combo; scoreEl.textContent = score; comboEl.textContent = `×${combo}`;
   sound(320 + combo * 45, .09, "triangle");
-  for (let i = 0; i < 18; i++) particles.push({
-    x: drop.x, y: drop.y, vx: (Math.random()-.5)*9, vy: (Math.random()-.7)*9,
-    life: 1, size: 3 + Math.random()*7, hue: drop.hue
-  });
-  if (particles.length > 180) particles.splice(0, particles.length - 180);
+  splash(drop.x, drop.y, drop.hue);
 }
 
 function missDrop() {
@@ -105,6 +122,7 @@ function missDrop() {
 function startGame() {
   drops = []; particles = []; trails = []; score = 0; combo = 1; lives = 3;
   spawnEvery = 850; startedAt = performance.now(); lastSpawn = performance.now(); ending = false; playing = true;
+  animal.x = innerWidth / 2; animal.y = innerHeight - Math.max(58, innerHeight * .075); animal.vx = 1.35; animal.hitFlash = 0;
   scoreEl.textContent = "0"; comboEl.textContent = "×1"; livesEl.textContent = "💙 💙 💙";
   welcome.classList.add("hidden"); gameover.classList.add("hidden"); shell.classList.add("playing");
   instruction.classList.remove("hidden"); setTimeout(() => instruction.classList.add("hidden"), 2200);
@@ -151,6 +169,28 @@ soundButton.addEventListener("click", () => { muted = !muted; soundButton.textCo
 document.querySelector("#startButton").addEventListener("click", startGame);
 document.querySelector("#restartButton").addEventListener("click", startGame);
 
+function drawAnimal() {
+  if (playing) {
+    animal.x += animal.vx;
+    if (animal.x < animal.radius + 20 || animal.x > innerWidth - animal.radius - 20) animal.vx *= -1;
+  }
+  animal.hitFlash = Math.max(0, animal.hitFlash - .045);
+  ctx.save();
+  ctx.translate(animal.x, animal.y);
+  if (animal.hitFlash > 0) {
+    ctx.shadowColor = "#ffca3a"; ctx.shadowBlur = 28;
+    ctx.scale(1 + animal.hitFlash * .18, 1 + animal.hitFlash * .18);
+  }
+  ctx.textAlign = "center";
+  ctx.font = `${animal.radius * 1.65}px "Segoe UI Emoji", sans-serif`;
+  ctx.fillText("🦔", 0, animal.radius * .52);
+  ctx.shadowBlur = 0;
+  ctx.font = "900 10px Nunito";
+  ctx.fillStyle = "rgba(255,255,255,.8)";
+  ctx.fillText("PROTEJEAZĂ-MĂ!", 0, animal.radius + 22);
+  ctx.restore();
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   ctx.clearRect(0, 0, innerWidth, innerHeight);
@@ -159,6 +199,7 @@ function frame(now) {
     if (now - lastSpawn > spawnEvery) { spawnDrop(); lastSpawn = now; }
   }
   drops.forEach(d => { d.update(); d.draw(); }); drops = drops.filter(d => !d.dead);
+  drawAnimal();
   particles.forEach(p => {
     p.x += p.vx; p.y += p.vy; p.vy += .18; p.life -= .025;
     ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = `hsl(${p.hue} 90% 64%)`;
