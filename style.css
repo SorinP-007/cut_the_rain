@@ -127,10 +127,32 @@ h1 em { color: var(--cyan); font-style: normal; }
 .hint { margin-top: 24px; color: #78a8c0; font-size: 11px; letter-spacing: 1.5px; }
 
 .gameover h2 { font-size: 52px; }
+.gameover {
+  width: min(430px, calc(100% - 34px));
+  padding: 28px 28px 34px;
+  border: 1px solid rgba(112, 226, 255, .22);
+  border-radius: 30px;
+  background: linear-gradient(145deg, rgba(12, 55, 85, .96), rgba(4, 24, 40, .98));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .5), inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter: blur(18px);
+}
+.gameover-icon {
+  display: grid;
+  place-items: center;
+  width: 66px;
+  height: 66px;
+  margin: -62px auto 12px;
+  border: 5px solid #09263b;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #5ce2ff, #168ed4);
+  font-size: 31px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.35);
+}
 .gameover > p:not(.eyebrow):not(.best) { color: #a9c8d8; margin-bottom: 0; }
 .final-score { display: block; color: var(--yellow); font: 700 84px/1 "Fredoka"; }
 .points-label { display: block; color: #7da9c0; letter-spacing: 3px; font-size: 11px; }
 .best { color: white; margin: 18px 0 22px; }
+.gameover .primary-button { min-width: 225px; justify-content: space-between; }
 
 .instruction { position: absolute; z-index: 6; left: 50%; bottom: 15%; transform: translateX(-50%); color: rgba(255,255,255,.85); font-size: 12px; letter-spacing: 2px; transition: opacity .5s; pointer-events: none; }
 .instruction.hidden { opacity: 0; }
